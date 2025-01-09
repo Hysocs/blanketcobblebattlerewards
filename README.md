@@ -7,7 +7,7 @@ A Minecraft mod that adds customizable rewards for winning battles and capturing
 - Multiple reward types (global, Pokémon-specific, type-based)
 - Configurable chances and cooldowns
 - Level-based conditions
-- Economy integration
+- Work with any economy that supports giving players eco via commands
 - Redeemable items system
 
 ## Basic Setup and Usage
