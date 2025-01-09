@@ -1,149 +1,53 @@
-# BlanketCobbleBattleRewards Configuration Guide
+# BlanketCobbleBattleRewards
 
-This guide will help you configure **BlanketCobbleBattleRewards** to customize rewards, add commands, items, and manage redeemable rewards. Below you'll find instructions for different configuration features.
+A Minecraft mod that adds customizable rewards for winning battles and capturing Pokémon in Cobblemon.
 
-## Configuration File Location
+## Features
 
-After starting your server with the mod installed, the configuration files will be generated in:
-```
-/config/BlanketCobblemonBattleRewards/
-```
+- Multiple reward types (global, Pokémon-specific, type-based)
+- Configurable chances and cooldowns
+- Level-based conditions
+- Economy integration
+- Redeemable items system
 
-### Main Config File
-- `config.json`: Stores all reward configurations.
-- `lost_rewards.json`: Stores data about players' lost rewards.
+## Basic Setup and Usage
 
----
+### Installation
+1. Place the mod in your server's `mods` folder
+2. Start the server once to generate configuration files
+3. Configure basic rewards in `config/CobblemonBattleRewards/config.json`
 
-## How to Configure Rewards
+### Simple Reward Configuration
 
-### Reward Structure
-A reward in the configuration file looks like this:
-```
-{
-    "message": "You received a special reward!",
-    "command": "give %player% minecraft:diamond 1",
-    "chance": 50.0,
-    "item": {
-        "id": "minecraft:nether_star",
-        "count": 1,
-        "customName": "Shiny Nether Star",
-        "lore": ["A special shiny item!", "Right-click to redeem"],
-        "trackerValue": 1000
-    },
-    "redeemable": true,
-    "redeemCommand": "give %player% minecraft:diamond 1",
-    "redeemMessage": "You redeemed the item and received a Diamond!",
-    "cooldown": 300,
-    "forceToGui": true
-}
-```
-
-### Parameters Explained
-- **`message`**: Displayed when the reward is given.
-- **`command`**: Command executed when the reward is granted. Use `%player%` as a placeholder for the player's name.
-- **`chance`**: Chance percentage for this reward (e.g., `50.0` is 50%).
-- **`item`**: Specifies the item to give. Includes:
-  - **`id`**: Item identifier (e.g., `minecraft:diamond`).
-  - **`count`**: Number of items.
-  - **`customName`**: Custom name for the item.
-  - **`lore`**: List of lore strings (text displayed in the item's description).
-  - **`trackerValue`**: Internal value for tracking or unique identification.
-- **`redeemable`**: If `true`, the item can be redeemed through the `/lostrewards` command.
-- **`redeemCommand`**: Command executed when the redeemable item is redeemed.
-- **`redeemMessage`**: Message displayed when the item is redeemed.
-- **`cooldown`**: Time in seconds before the reward can be granted again.
-- **`forceToGui`**: If `true`, the item will go into the **Lost Rewards GUI** instead of the player's inventory.
-
----
-
-## Adding Rewards
-
-### Add a Command-Based Reward
-To create a reward that executes a command:
-1. Open the `config.json` file.
-2. Add a new entry under the desired section (`global`, `pokemonRewards`, `typeGroupRewards`).
-3. Example:
-```
-{
-    "message": "Congratulations! Here is a free Diamond.",
-    "command": "give %player% minecraft:diamond 1",
-    "chance": 100.0
-}
-```
-
-### Add an Item-Based Reward
-To create a reward that gives an item:
-1. Define the `item` object in your reward.
-2. Example:
-```
-{
-    "message": "You received a special pickaxe!",
-    "item": {
-        "id": "minecraft:diamond_pickaxe",
-        "count": 1,
-        "customName": "Ultimate Pickaxe",
-        "lore": ["This pickaxe can mine anything!", "Handle with care!"],
-        "trackerValue": 100
-    },
-    "chance": 75.0
-}
-```
-
-### Add a Redeemable Item Reward
-To allow players to redeem an item through the `/lostrewards` command:
-1. Set `"redeemable": true`.
-2. Define the `redeemCommand` and `redeemMessage`.
-3. Example:
-```
-{
-    "message": "You received a redeemable Nether Star!",
-    "item": {
-        "id": "minecraft:nether_star",
-        "count": 1,
-        "customName": "Redeemable Nether Star",
-        "lore": ["Right-click to redeem!"],
-        "trackerValue": 999
-    },
-    "redeemable": true,
-    "redeemCommand": "give %player% minecraft:emerald 10",
-    "redeemMessage": "You redeemed your Nether Star and received 10 Emeralds!",
-    "forceToGui": true
-}
-```
-
----
-
-## Managing Lost Rewards
-
-### How It Works
-If a player’s inventory is full, rewards are automatically stored in the **Lost Rewards GUI**, accessible via the `/lostrewards` command.
-
-### Commands
-- `/lostrewards`: Opens the **Lost Rewards GUI** to claim items.
-- `/lostrewards clear`: Clears all stored rewards for the player.
-
----
-
-## Example Configurations
-
-### Global Rewards Example
-```
+#### Basic Money Reward
+```json
 {
     "global": {
         "rewards": [
             {
-                "message": "You received a Diamond!",
-                "command": "give %player% minecraft:diamond 1",
-                "chance": 50.0
-            },
+                "type": "command",
+                "id": "money_reward",
+                "message": "You earned 100 coins!",
+                "command": "eco give %player% 100",
+                "chance": 100.0
+            }
+        ]
+    }
+}
+```
+
+#### Basic Item Reward
+```json
+{
+    "global": {
+        "rewards": [
             {
-                "message": "You received a Golden Apple!",
+                "type": "item",
+                "id": "diamond_reward",
+                "message": "You received a diamond!",
                 "item": {
-                    "id": "minecraft:golden_apple",
-                    "count": 1,
-                    "customName": "Special Golden Apple",
-                    "lore": ["A golden apple with mysterious power."]
+                    "id": "minecraft:diamond",
+                    "count": 1
                 },
                 "chance": 50.0
             }
@@ -152,34 +56,185 @@ If a player’s inventory is full, rewards are automatically stored in the **Los
 }
 ```
 
-### Pokémon-Specific Rewards Example
-```
+## Advanced Configuration Guide
+
+### Valid Input Values
+
+#### Reward Types
+`type` field accepts one of:
+- `"command"` - Executes a command
+- `"item"` - Gives an item directly
+- `"redeemable"` - Creates a redeemable item token
+
+#### Trigger Conditions
+`triggerCondition` field accepts one of:
+- `"BattleWon"` - Triggers when player wins a battle
+- `"Captured"` - Triggers when player captures a Pokémon
+
+#### Inventory Full Behavior
+`inventoryFullBehavior` field accepts:
+- `"drop"` - Drops items on the ground
+
+#### Pokemon Types
+Valid types for `typeGroupRewards`:
+- `"normal"`
+- `"fire"`
+- `"water"`
+- `"electric"`
+- `"grass"`
+- `"ice"`
+- `"fighting"`
+- `"poison"`
+- `"ground"`
+- `"flying"`
+- `"psychic"`
+- `"bug"`
+- `"rock"`
+- `"ghost"`
+- `"dragon"`
+- `"dark"`
+- `"steel"`
+- `"fairy"`
+
+### Configuration Structure
+
+The configuration system is divided into several key components:
+
+### Global Configuration
+```json
 {
-    "pokemonRewards": {
-        "pikachu": {
-            "rewards": [
-                {
-                    "message": "Pikachu dropped a Thunderstone!",
-                    "item": {
-                        "id": "cobblemon:thunder_stone",
-                        "count": 1,
-                        "customName": "Special Thunderstone",
-                        "lore": ["A unique Thunderstone.", "Exclusive to Pikachu battles."]
-                    },
-                    "chance": 100.0,
-                    "redeemable": true,
-                    "redeemCommand": "give %player% minecraft:nether_star 1",
-                    "redeemMessage": "You redeemed your Thunderstone and received a Nether Star!"
-                }
-            ]
-        }
+    "globalConfig": {
+        "version": "1.0.0",      // Config version - do not modify
+        "debugEnabled": false     // Enables detailed logging for troubleshooting
     }
 }
 ```
 
----
+### Battle Rewards Configuration
+```json
+{
+    "battleRewardsConfig": {
+        "orders": {
+            "pokemon": 1,         // Priority for Pokemon-specific rewards
+            "typeGroup": 2,       // Priority for type-based rewards
+            "global": 3           // Priority for global rewards
+        },
+        "allowRewardsFromPlayerBattles": true,  // Enable/disable rewards from PvP
+        "enablePokemonRewards": true,           // Enable/disable Pokemon-specific rewards
+        "enableTypeGroupRewards": true,         // Enable/disable type-based rewards
+        "enableGlobalRewards": true,            // Enable/disable global rewards
+        "inventoryFullBehavior": "drop"         // Behavior when inventory is full
+    }
+}
+```
 
-## Debugging and Logs
-- Enable debug mode by setting `"debugEnabled": true` in the `globalConfig` section.
-- Debug messages will appear in the console for detailed insights.
+### Reward Types Explained
 
+#### 1. Command Rewards
+Used for executing commands (like giving money or items):
+```json
+{
+    "type": "command",
+    "id": "unique_reward_id",        // Unique identifier for the reward
+    "message": "Reward message",     // Message displayed to player
+    "command": "command string",     // Command to execute (%player% for player name)
+    "chance": 50.0,                 // Probability (0-100)
+    "cooldown": 300,                // Time in seconds between rewards
+    "cooldownActiveMessage": "",    // Message when cooldown is active
+    "triggerCondition": "BattleWon", // When to give reward
+    "minLevel": 1,                  // Minimum Pokemon level required
+    "maxLevel": 100                 // Maximum Pokemon level allowed
+}
+```
+
+#### 2. Item Rewards
+For giving items directly:
+```json
+{
+    "type": "item",
+    "id": "unique_reward_id",
+    "message": "Reward message",
+    "chance": 50.0,
+    "cooldown": 300,
+    "cooldownActiveMessage": "Wait %time% seconds",
+    "triggerCondition": "BattleWon",
+    "minLevel": 1,
+    "maxLevel": 100,
+    "item": {
+        "id": "minecraft:item_id",    // Minecraft/Cobblemon item identifier
+        "count": 1,                   // Number of items (1-64)
+        "customName": "Item Name",    // Custom display name
+        "lore": [                     // Item description
+            "Line 1",
+            "Line 2"
+        ],
+        "trackerValue": 12345        // Unique identifier for redeemable items
+    }
+}
+```
+
+#### 3. Redeemable Rewards
+For items that can be right-clicked to claim:
+```json
+{
+    "type": "redeemable",
+    "id": "unique_reward_id",
+    "message": "Initial receive message",
+    "redeemCommand": "give %player% item 1",  // Command executed on redemption
+    "redeemMessage": "Redemption message",    // Message shown when redeemed
+    "chance": 50.0,
+    "cooldown": 300,
+    "cooldownActiveMessage": "Wait %time% seconds",
+    "triggerCondition": "BattleWon",
+    "minLevel": 1,
+    "maxLevel": 100,
+    "item": {
+        // Same structure as Item Rewards
+    }
+}
+```
+
+### Value Ranges
+
+- `chance`: 0.0 to 100.0 (percentage)
+- `cooldown`: 0 or greater (seconds)
+- `minLevel`: 1 to 100
+- `maxLevel`: 1 to 100
+- `count` (in item): 1 to 64
+- `trackerValue`: Any unique integer
+
+### Economy Integration
+Compatible with any economy mod that uses commands. Example formats:
+```json
+{
+    "type": "command",
+    "command": "eco give %player% 100"     // Standard economy
+    // OR
+    "command": "balance add %player% 100"  // Impactor
+    // OR
+    "command": "ps money add %player% 100" // PlayerShops
+}
+```
+
+### Debug Mode
+Enable detailed logging by setting in config:
+```json
+{
+    "globalConfig": {
+        "debugEnabled": true
+    }
+}
+```
+
+## Important Notes
+
+- Some configuration changes require server restart
+- Each reward type can be globally enabled/disabled
+- Reward priorities determine which type is processed first
+- The `%player%` placeholder is replaced with player name
+- The `%time%` placeholder in cooldown messages is replaced with remaining seconds
+- Supports Minecraft color codes (§) in messages
+
+## Technical Support
+
+For bug reports or feature requests, please use the issue tracker on our repository.
