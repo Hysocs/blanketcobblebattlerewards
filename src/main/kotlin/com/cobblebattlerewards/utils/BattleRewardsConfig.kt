@@ -45,13 +45,13 @@ data class Reward(
     var type: String, // "item", "command", or "redeemable"
     var id: String, // Unique identifier for the reward
     var message: String,
-    var command: String? = null,
-    var redeemCommand: String? = null,
-    var redeemMessage: String? = null,
+    var command: String = "",
+    var redeemCommand: String = "",
+    var redeemMessage: String = "",
     var chance: Double,
     var item: Item? = null,
     var cooldown: Long = 0L,
-    var cooldownActiveMessage: String? = null,
+    var cooldownActiveMessage: String = "",
     var triggerCondition: String = "BattleWon",
     var minLevel: Int = 1,
     var maxLevel: Int = 100
@@ -223,6 +223,7 @@ object BattleRewardsConfigManager {
             )
         )
     )
+
 
     private fun createDefaultGlobalRewards() = GlobalRewards(
         rewards = listOf(
