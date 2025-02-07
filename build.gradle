@@ -92,6 +92,8 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-language-kotlin:${project.fabric_kotlin_version}"
 	modImplementation('me.lucko:fabric-permissions-api:0.2-SNAPSHOT')
 	modImplementation("curse.maven:cyber-permissions-407695:4640544")
+
+	modCompileOnly(files("libs/blanketutils-1.0.0.jar"))
 }
 
 processResources {

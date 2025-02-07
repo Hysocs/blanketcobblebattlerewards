@@ -4,7 +4,6 @@ import com.cobblebattlerewards.utils.*
 import com.cobblemon.mod.common.api.battles.model.actor.BattleActor
 import com.cobblemon.mod.common.api.events.CobblemonEvents
 import com.cobblemon.mod.common.battles.actor.PlayerBattleActor
-import com.cobblemon.mod.common.entity.pokemon.PokemonEntity
 import com.cobblemon.mod.common.pokemon.Pokemon
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents
@@ -44,10 +43,36 @@ object CobbleBattleRewards : ModInitializer {
 
 	override fun onInitialize() {
 		logger.info("BlanketCobbleBattleRewards: Initializing...")
-		ConfigManager.loadConfig()
-		setupEventHandlers()
-		CommandRegistrar.registerCommands()
-		logger.info("BlanketCobbleBattleRewards: Ready")
+
+		try {
+			// Try to access a BlanketUtils class to check if it's present
+			Class.forName("com.blanketutils.config.ConfigData")
+
+			// If we get here, BlanketUtils is present, continue initialization
+			BattleRewardsConfigManager.initializeAndLoad()
+			setupEventHandlers()
+			BattleRewardsCommands.registerCommands()
+			logger.info("BlanketCobbleBattleRewards: Ready")
+		} catch (e: ClassNotFoundException) {
+			// BlanketUtils is missing
+			val errorMessage = """
+            |§c[BlanketCobbleBattleRewards] ERROR: BlanketUtils is required but not found!
+            |§c--------------------------------------------------------------------
+            |§cThis mod requires BlanketUtils to function. Please:
+            |§c1. Download BlanketUtils from: [https://discord.gg/nrENPTmQKt]
+            |§c2. Place it in your mods folder
+            |§c3. Restart your server
+            |§c--------------------------------------------------------------------
+            |§cFor more information, visit: [your mod page]
+        """.trimMargin()
+
+			logger.error(errorMessage.replace("§c", ""))  // Clean version for log file
+			throw RuntimeException("BlanketUtils is required but not found! Please add BlanketUtils to your mods folder.")
+		} catch (e: Exception) {
+			// Handle other potential initialization errors
+			logger.error("Failed to initialize BlanketCobbleBattleRewards: ${e.message}")
+			throw e
+		}
 	}
 
 	private fun setupEventHandlers() {
@@ -144,15 +169,16 @@ object CobbleBattleRewards : ModInitializer {
 			state.playerPokemon?.getOwnerPlayer() as? ServerPlayerEntity
 		} ?: return
 
+		val config = BattleRewardsConfigManager.config
 		val rewardCategories = listOf(
 			"pokemon" to { applyPokemonRewards(player, state) },
 			"typeGroup" to { applyTypeRewards(player, state) },
 			"global" to { applyGlobalRewards(player, state) }
 		).sortedBy { (category, _) ->
 			when (category) {
-				"pokemon" -> ConfigManager.configData.battleRewardsConfig.orders.pokemon
-				"typeGroup" -> ConfigManager.configData.battleRewardsConfig.orders.typeGroup
-				"global" -> ConfigManager.configData.battleRewardsConfig.orders.global
+				"pokemon" -> config.orders.pokemon
+				"typeGroup" -> config.orders.typeGroup
+				"global" -> config.orders.global
 				else -> Int.MAX_VALUE
 			}
 		}
@@ -165,13 +191,15 @@ object CobbleBattleRewards : ModInitializer {
 		}
 	}
 
+
 	private fun applyPokemonRewards(player: ServerPlayerEntity, state: BattleState): Boolean {
 		val pokemonName = state.opponentPokemon?.species?.name?.lowercase() ?: return false
-		return ConfigManager.pokemonRewards[pokemonName]?.rewards
+		return BattleRewardsConfigManager.config.pokemonRewards[pokemonName]?.rewards
 			?.filter { isEligible(it, state) }
 			?.randomOrNull()
 			?.let { executeReward(player, it) } ?: false
 	}
+
 
 	private fun applyTypeRewards(player: ServerPlayerEntity, state: BattleState): Boolean {
 		val types = listOfNotNull(
@@ -180,7 +208,7 @@ object CobbleBattleRewards : ModInitializer {
 		)
 
 		return types.any { type ->
-			ConfigManager.typeGroupRewards[type]?.rewards
+			BattleRewardsConfigManager.config.typeGroupRewards[type]?.rewards
 				?.filter { isEligible(it, state) }
 				?.randomOrNull()
 				?.let { executeReward(player, it) } ?: false
@@ -188,11 +216,12 @@ object CobbleBattleRewards : ModInitializer {
 	}
 
 	private fun applyGlobalRewards(player: ServerPlayerEntity, state: BattleState): Boolean {
-		return ConfigManager.globalRewards
+		return BattleRewardsConfigManager.config.globalRewards.rewards
 			.filter { isEligible(it, state) }
 			.randomOrNull()
 			?.let { executeReward(player, it) } ?: false
 	}
+
 
 	private fun isEligible(reward: Reward, state: BattleState): Boolean {
 		// First check the probability
@@ -310,10 +339,10 @@ object CobbleBattleRewards : ModInitializer {
 	}
 
 	private fun findRewardByTracker(trackerValue: Int): Reward? {
-		return ConfigManager.configData.battleRewardsConfig.run {
+		return BattleRewardsConfigManager.config.run {
 			pokemonRewards.values.flatMap { it.rewards } +
 					typeGroupRewards.values.flatMap { it.rewards } +
-					ConfigManager.globalRewards
+					globalRewards.rewards
 		}.find { it.item?.trackerValue == trackerValue }
 	}
 
